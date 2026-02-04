@@ -1,0 +1,13 @@
+{
+  "obs-checkbox" : true,
+  "show-realtime-subtitle-checkbox" : true,
+  "stt-checkbox" : true,
+  "translate-checkbox" : true,
+  "channel-id-input" : "UCxsZ6NCzjU_t4YSxQLBcM5A",
+  "obs-websocket-port-input" : "4455",
+  "status-checker-options" : "ytdlp",
+  "ytdlp-cookies-path" : "",
+  "obs-websocket-ip-input" : "127.0.0.1",
+  "show-final-subtitle-checkbox" : true,
+  "show-translation-subtitle-checkbox" : true
+}

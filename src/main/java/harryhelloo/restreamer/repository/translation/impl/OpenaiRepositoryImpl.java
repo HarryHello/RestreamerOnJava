@@ -46,7 +46,6 @@ public class OpenaiRepositoryImpl implements OpenaiRepository {
             .apiKey(apiKey)
             .baseUrl(baseUrl)
             .build();
-        client.models()
         return null;
     }
 }
