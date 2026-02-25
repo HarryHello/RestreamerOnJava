@@ -18,17 +18,15 @@ public class SettingsController {
 
     // 获取所有设置
     @GetMapping
-    public Map<String, Object> getSettings() {
-        return settingsService.getAllSettings();
+    public ResponseEntity<Map<String, Object>> fetchSettings() {
+        return ResponseEntity.ok(settingsService.getAllSettings());
     }
 
     // 更新单个设置
     @PostMapping("/{key}")
     public ResponseEntity<Map<String, Object>> updateSetting(
         @PathVariable String key,
-        @RequestBody Map<String, Object> request) {
-
-        Object value = request.get("value");
+        @RequestBody Object value) {
         if (value == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -38,4 +36,5 @@ public class SettingsController {
         // 返回更新后的完整设置
         return ResponseEntity.ok(settingsService.getAllSettings());
     }
+
 }

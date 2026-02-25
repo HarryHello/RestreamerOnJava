@@ -37,7 +37,7 @@ public class SettingsService {
                     settings.putAll(loaded);
                     log.info("设置已从文件加载");
                 } else {
-                    log.warn("{} 文件为空，使用默认空设置", SETTINGS_FILE);
+                    log.warn("{} 文件为空, 使用默认空设置", SETTINGS_FILE);
                 }
             } catch (IOException e) {
                 log.error("加载设置失败: {}", e.getMessage());
@@ -63,6 +63,7 @@ public class SettingsService {
             log.info("设置已保存到文件");
         } catch (IOException e) {
             log.error("保存设置失败: {}", e.getMessage());
+            throw new FileException("Failed to save to %s".formatted(SETTINGS_FILE), e);
         }
     }
 
