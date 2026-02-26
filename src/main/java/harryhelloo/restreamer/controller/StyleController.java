@@ -3,6 +3,7 @@ package harryhelloo.restreamer.controller;
 import harryhelloo.restreamer.pojo.HistoryStyle;
 import harryhelloo.restreamer.pojo.SubtitleStyle;
 import harryhelloo.restreamer.service.StyleService;
+import harryhelloo.restreamer.service.SettingsService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,18 +15,20 @@ import org.springframework.web.bind.annotation.*;
 public class StyleController {
     @Autowired
     private StyleService styleService;
+    @Autowired
+    private SettingsService settingsService;
 
     @PutMapping("/save-style/subtitle")
     public ResponseEntity<SubtitleStyle> saveSubtitleStyle(@RequestBody SubtitleStyle subtitleStyle) {
         styleService.setCurrentSubtitleStyle(subtitleStyle);
-        styleService.saveSubtitleStyleToFile();
+        settingsService.saveSettings(); // 保存到Settings文件
         return ResponseEntity.ok(styleService.getCurrentSubtitleStyle());
     }
 
     @PutMapping("/save-style/history")
     public ResponseEntity<HistoryStyle> saveHistoryStyle(@RequestBody HistoryStyle historyStyle) {
         styleService.setCurrentHistoryStyle(historyStyle);
-        styleService.saveHistoryStyleToFile();
+        settingsService.saveSettings(); // 保存到Settings文件
         return ResponseEntity.ok(styleService.getCurrentHistoryStyle());
     }
 

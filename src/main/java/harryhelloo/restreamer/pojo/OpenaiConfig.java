@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ObsWebsocket {
-    private String host = "localhost";
-    private Integer port = 4455;
-    private String password = "";
+@Builder
+public class OpenaiConfig {
+    private String baseUrl;
+    private String apiKey;
+    private String model;
 }
