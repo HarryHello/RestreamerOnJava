@@ -1,6 +1,7 @@
 package harryhelloo.restreamer.pojo;
 
 import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,19 @@ import java.util.List;
 public class Settings {
     private static volatile Settings instance;
     private final List<ConfigurationChangeListener> listeners = new ArrayList<>();
-
+    private String ChannelId;
+    private String StatusCheckTool = "ytdlp"; // ytdlp / youtubeapi
+    private String YoutubeCookiesPath; // for ytdlp
+    private String YoutubeApiKey; // for youtubeapi
+    private ObsWebsocket obsWebsocket;
+    private String translationProducer = "ollama"; // ollama / openai / deepl
+    private OllamaConfig ollamaConfig;
+    private String deeplAuthKey;
+    private OpenaiConfig openaiConfig;
+    private String sourceLang;
+    private String TargetLang;
+    private SubtitleStyle subtitleStyle;
+    private HistoryStyle historyStyle;
     private Settings() {
     }
 
@@ -21,11 +34,6 @@ public class Settings {
             }
         }
         return instance;
-    }
-
-    // 配置变更监听器接口
-    public interface ConfigurationChangeListener {
-        void onConfigurationChanged(String key, Object oldValue, Object newValue, Settings settings);
     }
 
     // 添加配置变更监听器
@@ -44,25 +52,6 @@ public class Settings {
             listener.onConfigurationChanged(key, oldValue, newValue, this);
         }
     }
-
-    private String ChannelId;
-
-    private String StatusCheckTool = "ytdlp"; // ytdlp / youtubeapi
-
-    private String YoutubeCookiesPath; // for ytdlp
-    private String YoutubeApiKey; // for youtubeapi
-
-    private ObsWebsocket obsWebsocket;
-
-    private String translationProducer = "ollama"; // ollama / openai / deepl
-    private OllamaConfig ollamaConfig;
-    private String deeplApi;
-    private OpenaiConfig openaiConfig;
-    private String sourceLang;
-    private String TargetLang;
-
-    private SubtitleStyle subtitleStyle;
-    private HistoryStyle historyStyle;
 
     // 重写setter方法，添加配置变更通知
     public void setChannelId(String channelId) {
@@ -107,10 +96,10 @@ public class Settings {
         notifyConfigurationChanged("ollamaConfig", oldValue, ollamaConfig);
     }
 
-    public void setDeeplApi(String deeplApi) {
-        String oldValue = this.deeplApi;
-        this.deeplApi = deeplApi;
-        notifyConfigurationChanged("deeplApi", oldValue, deeplApi);
+    public void setDeeplAuthKey(String deeplAuthKey) {
+        String oldValue = this.deeplAuthKey;
+        this.deeplAuthKey = deeplAuthKey;
+        notifyConfigurationChanged("deeplApi", oldValue, deeplAuthKey);
     }
 
     public void setOpenaiConfig(OpenaiConfig openaiConfig) {
@@ -141,5 +130,10 @@ public class Settings {
         HistoryStyle oldValue = this.historyStyle;
         this.historyStyle = historyStyle;
         notifyConfigurationChanged("historyStyle", oldValue, historyStyle);
+    }
+
+    // 配置变更监听器接口
+    public interface ConfigurationChangeListener {
+        void onConfigurationChanged(String key, Object oldValue, Object newValue, Settings settings);
     }
 }

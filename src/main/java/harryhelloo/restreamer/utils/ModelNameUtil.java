@@ -38,6 +38,10 @@ public class ModelNameUtil {
             return MODEL_LABEL_MAP.get(modelName);
         }
 
+        if (modelName.contains("/")) {
+            return modelName;
+        }
+
         // 通用转换逻辑
         String label = modelName
             // 处理常见模型前缀

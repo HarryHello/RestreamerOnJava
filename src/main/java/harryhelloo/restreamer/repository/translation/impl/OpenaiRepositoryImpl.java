@@ -7,42 +7,77 @@ import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionStreamOptions;
 import com.openai.models.models.ModelListPageAsync;
+import harryhelloo.restreamer.exception.EmptyConfigException;
 import harryhelloo.restreamer.exception.OpenaiException;
 import harryhelloo.restreamer.pojo.OpenaiConfig;
 import harryhelloo.restreamer.pojo.Options;
 import harryhelloo.restreamer.pojo.Settings;
 import harryhelloo.restreamer.repository.translation.OpenaiRepository;
 import harryhelloo.restreamer.utils.ModelNameUtil;
+import harryhelloo.restreamer.utils.promptUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
 
-import java.text.MessageFormat;
 import java.util.concurrent.CompletableFuture;
 
+@Log4j2
+@Component
 public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.ConfigurationChangeListener {
     @Getter
     private OpenAIClientAsync client;
 
+    @Getter
+    private boolean isReady = false;
+
     // 使用PostConstruct注解初始化
     @PostConstruct
     public void init() {
-        initializeClient();
         // 注册配置变更监听器
         Settings.get().addConfigurationChangeListener(this);
+    }
+
+    private void closeClient() {
+        if (client != null) {
+            client.close();
+            client = null;
+        }
+        isReady = false;
+    }
+
+    private void buildClient() {
+        if (isReady) {
+            closeClient();
+        }
+        OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
+        if (openaiConfig == null) {
+            throw new EmptyConfigException("OpenAI config is empty!");
+        }
+
+        String baseUrl = openaiConfig.getBaseUrl();
+        if (baseUrl == null || baseUrl.trim().isEmpty()) {
+            throw new EmptyConfigException("Base url is empty!");
+        }
+
+        String apiKey = openaiConfig.getApiKey();
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new EmptyConfigException("Api key is empty!");
+        }
+        this.client = OpenAIOkHttpClientAsync.builder()
+            .apiKey(apiKey.trim())
+            .baseUrl(baseUrl.trim())
+            .build();
+        isReady = true;
     }
 
     // 初始化客户端
     private void initializeClient() {
         OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
         if (openaiConfig != null) {
-            if (client != null) {
-                // 关闭旧客户端
-                client.close();
-            }
-            this.client = OpenAIOkHttpClientAsync.builder()
-                .apiKey(openaiConfig.getApiKey())
-                .baseUrl(openaiConfig.getBaseUrl())
-                .build();
+            closeClient();
+            buildClient();
         }
     }
 
@@ -50,6 +85,10 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
     public Options initModels() {
         if (client == null) {
             initializeClient();
+        }
+
+        if (client == null) {
+            throw new OpenaiException("OpenAI client is not initialized. Please check your configuration.");
         }
 
         try {
@@ -83,15 +122,24 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
             initializeClient();
         }
 
-        OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
+        if (client == null) {
+            throw new OpenaiException("OpenAI client is not initialized. Please check your configuration.");
+        }
 
-        String userMessage = MessageFormat.format(
-            "Please translate the follow text from {0} to {1} and answer only result: {2}",
-            sourceLang, targetLang, text
-        );
+        OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
+        if (openaiConfig == null) {
+            throw new OpenaiException("OpenAI configuration is not set. Please check your settings.");
+        }
+
+        String model = openaiConfig.getModel();
+        if (model == null || model.isEmpty()) {
+            throw new OpenaiException("OpenAI model is not configured. Please set a valid model.");
+        }
+
+        String userMessage = promptUtil.translatePrompt(text, sourceLang, targetLang);
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
             .addUserMessage(userMessage)
-            .model(openaiConfig.getModel())
+            .model(model)
             .streamOptions(ChatCompletionStreamOptions.builder().build()) // 启用流式输出
             .build();
 
@@ -101,9 +149,19 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
                 client.chat().completions().createStreaming(params);
 
             // 创建一个新的AsyncStreamResponse，将ChatCompletionChunk转换为String
-            return new AsyncStreamResponse<String>() {
+            return new AsyncStreamResponse<>() {
                 @Override
-                public AsyncStreamResponse<String> subscribe(Handler<String> handler) {
+                public void close() {
+                    streamResponse.close();
+                }
+
+                @Override
+                public @NotNull CompletableFuture<Void> onCompleteFuture() {
+                    return streamResponse.onCompleteFuture();
+                }
+
+                @Override
+                public AsyncStreamResponse<String> subscribe(Handler<? super String> handler) {
                     streamResponse.subscribe(new Handler<>() {
                         @Override
                         public void onComplete(java.util.Optional<Throwable> error) {
@@ -121,7 +179,7 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
                 }
 
                 @Override
-                public AsyncStreamResponse<String> subscribe(Handler<String> handler,
+                public AsyncStreamResponse<String> subscribe(Handler<? super String> handler,
                                                              java.util.concurrent.Executor executor) {
                     streamResponse.subscribe(new Handler<ChatCompletionChunk>() {
                         @Override
@@ -137,16 +195,6 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
                         }
                     }, executor);
                     return this;
-                }
-
-                @Override
-                public void close() {
-                    streamResponse.close();
-                }
-
-                @Override
-                public CompletableFuture<Void> onCompleteFuture() {
-                    return streamResponse.onCompleteFuture();
                 }
             };
         } catch (Exception e) {

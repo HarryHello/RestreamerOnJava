@@ -1,9 +1,7 @@
 package harryhelloo.restreamer.repository.translation;
 
+import com.openai.core.http.AsyncStreamResponse;
 import harryhelloo.restreamer.pojo.Options;
 
-public interface OllamaRepository {
-    String translate(String text, String sourceLang, String targetLang);
-
-    Options getModels();
+public interface OllamaRepository extends TranslationRepository {
 }
