@@ -32,7 +32,7 @@ public class DeeplRepositoryImpl implements DeeplRepository {
         } catch (InterruptedException e) {
             throw new DeeplException("DeepL test was interrupted!", e);
         }
-        return null;
+        return new Options();
     }
 
     @Override

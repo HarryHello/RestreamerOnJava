@@ -1,5 +1,6 @@
-package harryhelloo.restreamer.exception;
+package harryhelloo.restreamer.controller;
 
+import harryhelloo.restreamer.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
