@@ -27,12 +27,13 @@ import lombok.Data;
 public class OptionPair {
 
     /**
+     * 选项标签（显示文本）
+     */
+    private String label;
+    
+    /**
      * 选项值（实际存储的值）
      */
     private Object value;
 
-    /**
-     * 选项标签（显示文本）
-     */
-    private String label;
 }
