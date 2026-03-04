@@ -1,9 +1,9 @@
 package harryhelloo.restreamer.repository.youtube;
 
-import harryhelloo.restreamer.pojo.youtube.Channel;
+import harryhelloo.restreamer.pojo.StreamerChannel;
 
 public interface YtdlpRepository {
-    Channel getChannelName(Channel channel, String cookiesPath, String ytdlpPath);
+    StreamerChannel getChannelName(StreamerChannel channel, String cookiesPath, String ytdlpPath);
 
-    Channel getChannelStatus(Channel channel, String cookiesPath, String ytdlpPath);
+    StreamerChannel getChannelStatus(StreamerChannel channel, String cookiesPath, String ytdlpPath);
 }

@@ -9,12 +9,13 @@ import com.openai.models.chat.completions.ChatCompletionStreamOptions;
 import com.openai.models.models.ModelListPageAsync;
 import harryhelloo.restreamer.exception.EmptyConfigException;
 import harryhelloo.restreamer.exception.OpenaiException;
+import harryhelloo.restreamer.manager.SettingsManager;
 import harryhelloo.restreamer.pojo.OpenaiConfig;
 import harryhelloo.restreamer.pojo.Options;
 import harryhelloo.restreamer.pojo.Settings;
 import harryhelloo.restreamer.repository.translation.OpenaiRepository;
-import harryhelloo.restreamer.utils.ModelNameUtil;
-import harryhelloo.restreamer.utils.promptUtil;
+import harryhelloo.restreamer.util.ModelNameUtil;
+import harryhelloo.restreamer.util.promptUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -25,18 +26,18 @@ import java.util.concurrent.CompletableFuture;
 
 @Log4j2
 @Component
-public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.ConfigurationChangeListener {
+public class OpenaiRepositoryImpl implements OpenaiRepository, SettingsManager.ConfigurationChangeListener {
     @Getter
     private OpenAIClientAsync client;
 
     @Getter
     private boolean isReady = false;
 
-    // 使用PostConstruct注解初始化
+    // 使用 PostConstruct 注解初始化
     @PostConstruct
     public void init() {
         // 注册配置变更监听器
-        Settings.get().addConfigurationChangeListener(this);
+        SettingsManager.getInstance().addConfigurationChangeListener(this);
     }
 
     private void closeClient() {
@@ -51,7 +52,7 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
         if (isReady) {
             closeClient();
         }
-        OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
+        OpenaiConfig openaiConfig = SettingsManager.getInstance().getSettings().getOpenaiConfig();
         if (openaiConfig == null) {
             throw new EmptyConfigException("OpenAI config is empty!");
         }
@@ -74,7 +75,7 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
 
     // 初始化客户端
     private void initializeClient() {
-        OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
+        OpenaiConfig openaiConfig = SettingsManager.getInstance().getSettings().getOpenaiConfig();
         if (openaiConfig != null) {
             closeClient();
             buildClient();
@@ -96,10 +97,10 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
             CompletableFuture<ModelListPageAsync> modelListPageFuture = client.models().list();
             ModelListPageAsync modelListPage = modelListPageFuture.join(); // 阻塞等待
             Options options = new Options();
-            // 初始化options列表
+            // 初始化 options 列表
             options.setOptions(new java.util.ArrayList<>());
 
-            // 将模型ID添加到Options中，使用ModelNameUtil生成友好的标签
+            // 将模型 ID 添加到 Options 中，使用 ModelNameUtil 生成友好的标签
             modelListPage.data().forEach(model -> {
                 String modelId = model.id();
                 String modelLabel = ModelNameUtil.getLabel(modelId);
@@ -126,7 +127,7 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
             throw new OpenaiException("OpenAI client is not initialized. Please check your configuration.");
         }
 
-        OpenaiConfig openaiConfig = Settings.get().getOpenaiConfig();
+        OpenaiConfig openaiConfig = SettingsManager.getInstance().getSettings().getOpenaiConfig();
         if (openaiConfig == null) {
             throw new OpenaiException("OpenAI configuration is not set. Please check your settings.");
         }
@@ -148,7 +149,7 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
             AsyncStreamResponse<ChatCompletionChunk> streamResponse =
                 client.chat().completions().createStreaming(params);
 
-            // 创建一个新的AsyncStreamResponse，将ChatCompletionChunk转换为String
+            // 创建一个新的 AsyncStreamResponse，将 ChatCompletionChunk 转换为 String
             return new AsyncStreamResponse<>() {
                 @Override
                 public void close() {
@@ -204,7 +205,7 @@ public class OpenaiRepositoryImpl implements OpenaiRepository, Settings.Configur
 
     @Override
     public void onConfigurationChanged(String key, Object oldValue, Object newValue, Settings settings) {
-        // 当OpenAI配置变更时重置客户端
+        // 当 OpenAI 配置变更时重置客户端
         if ("openaiConfig".equals(key)) {
             initializeClient();
         }

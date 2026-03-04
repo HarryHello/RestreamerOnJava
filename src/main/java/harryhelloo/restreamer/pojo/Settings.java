@@ -1,139 +1,142 @@
 package harryhelloo.restreamer.pojo;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * 系统配置设置
+ * 
+ * <p>包含应用程序的所有配置选项，通过 SettingsManager 统一管理。</p>
+ * 
+ * <h2>配置分类：</h2>
+ * <ul>
+ *     <li><strong>频道配置：</strong>ChannelId、StatusCheckTool、YouTube 相关</li>
+ *     <li><strong>OBS 配置：</strong>obsWebsocket、doObsRecord、doAutoRestartObsSource 等</li>
+ *     <li><strong>字幕配置：</strong>doRecognize、doTranslate、translationProducer 等</li>
+ *     <li><strong>样式配置：</strong>subtitleStyle、historyStyle</li>
+ * </ul>
+ * 
+ * <h2>翻译服务配置：</h2>
+ * <ul>
+ *     <li>translationProducer: "ollama" / "openai" / "deepl"</li>
+ *     <li>根据 producer 不同，配置对应的 ollamaConfig、openaiConfig 或 deeplAuthKey</li>
+ * </ul>
+ * 
+ * @author harryhelloo
+ * @version 1.0
+ * @see harryhelloo.restreamer.manager.SettingsManager
+ */
 @Data
+@NoArgsConstructor
 public class Settings {
-    private static volatile Settings instance;
-    private final List<ConfigurationChangeListener> listeners = new ArrayList<>();
+    
+    /**
+     * 当前频道 ID
+     */
     private String ChannelId;
+
+    /**
+     * 直播状态检查工具
+     * <p>可选值："ytdlp"（yt-dlp）或 "youtubeapi"（YouTube Data API）</p>
+     */
     private String StatusCheckTool = "ytdlp"; // ytdlp / youtubeapi
+    
+    /**
+     * YouTube Cookie 文件路径
+     * <p>用于 yt-dlp 访问会员限定内容，仅当 StatusCheckTool="ytdlp" 时使用</p>
+     */
     private String YoutubeCookiesPath; // for ytdlp
+    
+    /**
+     * YouTube Data API Key
+     * <p>用于 YouTube API 调用，仅当 StatusCheckTool="youtubeapi" 时使用</p>
+     */
     private String YoutubeApiKey; // for youtubeapi
+
+    /**
+     * OBS WebSocket 连接配置
+     */
     private ObsWebsocket obsWebsocket;
+    
+    /**
+     * 是否启用 OBS 直播录制
+     */
+    private Boolean doObsRecord = false; // 是否录制直播
+    
+    /**
+     * 是否启用 OBS 媒体源自动重启
+     * <p>当媒体源停止或暂停时自动重启</p>
+     */
+    private Boolean doAutoRestartObsSource = true;  // 是否自动重启 OBS 媒体源
+    
+    /**
+     * OBS 场景名称
+     * <p>用于定位包含媒体源的场景</p>
+     */
+    private String ObsScene = "restreamer";         // OBS 场景名称
+    
+    /**
+     * OBS 媒体源名称
+     * <p>用于自动重启的媒体源标识</p>
+     */
+    private String ObsSource = "stream";            // OBS 媒体源名称
+
+    /**
+     * 是否启用语音识别
+     * <p>启用后会记录原文字幕</p>
+     */
+    private Boolean doRecognize = true; // 是否启用识别
+    
+    /**
+     * 是否启用翻译
+     * <p>启用后会将识别到的字幕进行翻译并记录</p>
+     */
+    private Boolean doTranslate = true; // 是否启用翻译
+
+    /**
+     * 翻译服务提供者
+     * <p>可选值："ollama" / "openai" / "deepl"</p>
+     */
     private String translationProducer = "ollama"; // ollama / openai / deepl
+    
+    /**
+     * Ollama 配置
+     * <p>当 translationProducer="ollama" 时使用</p>
+     */
     private OllamaConfig ollamaConfig;
+    
+    /**
+     * DeepL 认证密钥
+     * <p>当 translationProducer="deepl" 时使用</p>
+     */
     private String deeplAuthKey;
+    
+    /**
+     * OpenAI 配置
+     * <p>当 translationProducer="openai" 时使用</p>
+     */
     private OpenaiConfig openaiConfig;
+    
+    /**
+     * 源语言代码
+     * <p>如 "en"（英语）、"zh"（中文）等</p>
+     */
     private String sourceLang;
+    
+    /**
+     * 目标语言代码
+     * <p>翻译后的语言，如 "zh"（中文）、"ja"（日语）等</p>
+     */
     private String TargetLang;
+
+    /**
+     * 字幕样式配置
+     */
     private SubtitleStyle subtitleStyle;
+    
+    /**
+     * 历史记录样式配置
+     */
     private HistoryStyle historyStyle;
-    private Settings() {
-    }
 
-    public static Settings get() {
-        if (instance == null) {
-            synchronized (Settings.class) {
-                if (instance == null) {
-                    instance = new Settings();
-                }
-            }
-        }
-        return instance;
-    }
-
-    // 添加配置变更监听器
-    public void addConfigurationChangeListener(ConfigurationChangeListener listener) {
-        listeners.add(listener);
-    }
-
-    // 移除配置变更监听器
-    public void removeConfigurationChangeListener(ConfigurationChangeListener listener) {
-        listeners.remove(listener);
-    }
-
-    // 通知所有监听器配置变更
-    private void notifyConfigurationChanged(String key, Object oldValue, Object newValue) {
-        for (ConfigurationChangeListener listener : listeners) {
-            listener.onConfigurationChanged(key, oldValue, newValue, this);
-        }
-    }
-
-    // 重写setter方法，添加配置变更通知
-    public void setChannelId(String channelId) {
-        String oldValue = this.ChannelId;
-        this.ChannelId = channelId;
-        notifyConfigurationChanged("ChannelId", oldValue, channelId);
-    }
-
-    public void setStatusCheckTool(String statusCheckTool) {
-        String oldValue = this.StatusCheckTool;
-        this.StatusCheckTool = statusCheckTool;
-        notifyConfigurationChanged("StatusCheckTool", oldValue, statusCheckTool);
-    }
-
-    public void setYoutubeCookiesPath(String youtubeCookiesPath) {
-        String oldValue = this.YoutubeCookiesPath;
-        this.YoutubeCookiesPath = youtubeCookiesPath;
-        notifyConfigurationChanged("YoutubeCookiesPath", oldValue, youtubeCookiesPath);
-    }
-
-    public void setYoutubeApiKey(String youtubeApiKey) {
-        String oldValue = this.YoutubeApiKey;
-        this.YoutubeApiKey = youtubeApiKey;
-        notifyConfigurationChanged("YoutubeApiKey", oldValue, youtubeApiKey);
-    }
-
-    public void setObsWebsocket(ObsWebsocket obsWebsocket) {
-        ObsWebsocket oldValue = this.obsWebsocket;
-        this.obsWebsocket = obsWebsocket;
-        notifyConfigurationChanged("obsWebsocket", oldValue, obsWebsocket);
-    }
-
-    public void setTranslationProducer(String translationProducer) {
-        String oldValue = this.translationProducer;
-        this.translationProducer = translationProducer;
-        notifyConfigurationChanged("translationProducer", oldValue, translationProducer);
-    }
-
-    public void setOllamaConfig(OllamaConfig ollamaConfig) {
-        OllamaConfig oldValue = this.ollamaConfig;
-        this.ollamaConfig = ollamaConfig;
-        notifyConfigurationChanged("ollamaConfig", oldValue, ollamaConfig);
-    }
-
-    public void setDeeplAuthKey(String deeplAuthKey) {
-        String oldValue = this.deeplAuthKey;
-        this.deeplAuthKey = deeplAuthKey;
-        notifyConfigurationChanged("deeplApi", oldValue, deeplAuthKey);
-    }
-
-    public void setOpenaiConfig(OpenaiConfig openaiConfig) {
-        OpenaiConfig oldValue = this.openaiConfig;
-        this.openaiConfig = openaiConfig;
-        notifyConfigurationChanged("openaiConfig", oldValue, openaiConfig);
-    }
-
-    public void setSourceLang(String sourceLang) {
-        String oldValue = this.sourceLang;
-        this.sourceLang = sourceLang;
-        notifyConfigurationChanged("sourceLang", oldValue, sourceLang);
-    }
-
-    public void setTargetLang(String targetLang) {
-        String oldValue = this.TargetLang;
-        this.TargetLang = targetLang;
-        notifyConfigurationChanged("TargetLang", oldValue, targetLang);
-    }
-
-    public void setSubtitleStyle(SubtitleStyle subtitleStyle) {
-        SubtitleStyle oldValue = this.subtitleStyle;
-        this.subtitleStyle = subtitleStyle;
-        notifyConfigurationChanged("subtitleStyle", oldValue, subtitleStyle);
-    }
-
-    public void setHistoryStyle(HistoryStyle historyStyle) {
-        HistoryStyle oldValue = this.historyStyle;
-        this.historyStyle = historyStyle;
-        notifyConfigurationChanged("historyStyle", oldValue, historyStyle);
-    }
-
-    // 配置变更监听器接口
-    public interface ConfigurationChangeListener {
-        void onConfigurationChanged(String key, Object oldValue, Object newValue, Settings settings);
-    }
 }

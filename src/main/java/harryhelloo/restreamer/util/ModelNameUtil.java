@@ -1,10 +1,47 @@
-package harryhelloo.restreamer.utils;
+package harryhelloo.restreamer.util;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 模型名称工具类
+ * 
+ * <p>将模型名称转换为人类可读的标签，用于前端显示。</p>
+ * 
+ * <h2>主要功能：</h2>
+ * <ul>
+ *     <li>特殊模型映射（如 {@code gpt-4o} → {@code GPT-4o}）</li>
+ *     <li>通用模型名称格式化（如 {@code llama3-8b} → {@code LLaMA 3 8B}）</li>
+ *     <li>批量处理模型名称列表</li>
+ * </ul>
+ * 
+ * <h2>支持的模型系列：</h2>
+ * <ul>
+ *     <li><strong>OpenAI：</strong>GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo</li>
+ *     <li><strong>Anthropic：</strong>Claude 3 Opus/Sonnet/Haiku</li>
+ *     <li><strong>Google：</strong>Gemini 1.5 Pro/Flash</li>
+ *     <li><strong>Meta：</strong>LLaMA 3</li>
+ *     <li><strong>Mistral：</strong>Mistral 7B, Mixtral 8x7B</li>
+ *     <li><strong>其他：</strong>Qwen, DeepSeek, Kimi, MiniMax, GLM, Falcon, BLOOM</li>
+ * </ul>
+ * 
+ * <h2>使用示例：</h2>
+ * <pre>
+ * // 单个模型名称转换
+ * String label = ModelNameUtil.getLabel("gpt-4o");  // 返回 "GPT-4o"
+ * 
+ * // 批量处理
+ * Map&lt;String, String&gt; labelMap = ModelNameUtil.getLabelMap(modelNames);
+ * </pre>
+ * 
+ * @author harryhelloo
+ * @version 1.0
+ */
 public class ModelNameUtil {
-    // 常见模型的映射表，用于特殊处理
+    
+    /**
+     * 常见模型的映射表，用于特殊处理
+     */
     private static final Map<String, String> MODEL_LABEL_MAP = new HashMap<>();
 
     static {
@@ -32,6 +69,14 @@ public class ModelNameUtil {
         MODEL_LABEL_MAP.put("mixtral-8x7b-v0.1", "Mixtral 8x7B v0.1");
     }
 
+    /**
+     * 将模型名称转换为人类可读的标签
+     * 
+     * <p>首先检查特殊映射表，如果没有则使用通用规则转换。</p>
+     *
+     * @param modelName 模型名称（如 {@code gpt-4o}, {@code llama3-8b}）
+     * @return 人类可读的标签（如 {@code GPT-4o}, {@code LLaMA 3 8B}）
+     */
     public static String getLabel(String modelName) {
         // 首先检查是否有特殊映射
         if (MODEL_LABEL_MAP.containsKey(modelName)) {
@@ -76,7 +121,12 @@ public class ModelNameUtil {
         return label;
     }
 
-    // 批量处理模型名称列表
+    /**
+     * 批量处理模型名称列表
+     * 
+     * @param modelNames 模型名称集合
+     * @return 模型名称到标签的映射表
+     */
     public static Map<String, String> getLabelMap(Iterable<String> modelNames) {
         Map<String, String> labelMap = new HashMap<>();
         for (String modelName : modelNames) {

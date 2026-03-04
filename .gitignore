@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 3rdParty/
+subtitles/
 
 ### STS ###
 .apt_generated
@@ -32,4 +33,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Test Config ###
+src/test/resources/test-obs.properties
 
