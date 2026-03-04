@@ -2,8 +2,8 @@ package harryhelloo.restreamer.repository.youtube.impl;
 
 import harryhelloo.restreamer.exception.YtdlpException;
 import harryhelloo.restreamer.pojo.ProcessOutput;
+import harryhelloo.restreamer.pojo.StreamerChannel;
 import harryhelloo.restreamer.pojo.Upcoming;
-import harryhelloo.restreamer.pojo.youtube.Channel;
 import harryhelloo.restreamer.repository.youtube.YtdlpRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Repository;
@@ -81,15 +81,15 @@ public class YtdlpRepositoryImpl implements YtdlpRepository {
             .build();
     }
 
-    private static void setChannelAsUnknownStatus(Channel channel) {
-        channel.setCheckStream(false);
+    private static void setChannelAsUnknownStatus(StreamerChannel channel) {
+        channel.setCheckingStream(false);
         channel.setNoStream(false);
         channel.setStreaming(false);
         channel.setUpcomingStream(false);
     }
 
     @Override
-    public Channel getChannelName(@NotNull Channel channel, String cookiesPath, String ytdlpPath) {
+    public StreamerChannel getChannelName(@NotNull StreamerChannel channel, String cookiesPath, String ytdlpPath) {
         if (ytdlpPath == null) {
             ytdlpPath = "yt-dlp";
         }
@@ -129,7 +129,7 @@ public class YtdlpRepositoryImpl implements YtdlpRepository {
     }
 
     @Override
-    public Channel getChannelStatus(Channel channel, String cookiesPath, String ytdlpPath) {
+    public StreamerChannel getChannelStatus(StreamerChannel channel, String cookiesPath, String ytdlpPath) {
         setChannelAsUnknownStatus(channel);
         if (ytdlpPath == null || ytdlpPath.isEmpty()) {
             ytdlpPath = "yt-dlp";

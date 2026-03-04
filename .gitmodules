@@ -1,0 +1,3 @@
+[submodule "docs/api"]
+	path = docs/api
+	url = https://github.com/HarryHello/restreamer-api-docs-repo.git

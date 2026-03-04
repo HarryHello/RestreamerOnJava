@@ -3,11 +3,12 @@ package harryhelloo.restreamer.repository.translation.impl;
 import com.openai.core.http.AsyncStreamResponse;
 import harryhelloo.restreamer.exception.EmptyConfigException;
 import harryhelloo.restreamer.exception.OllamaException;
+import harryhelloo.restreamer.manager.SettingsManager;
 import harryhelloo.restreamer.pojo.OllamaConfig;
 import harryhelloo.restreamer.pojo.Options;
 import harryhelloo.restreamer.pojo.Settings;
 import harryhelloo.restreamer.repository.translation.OllamaRepository;
-import harryhelloo.restreamer.utils.promptUtil;
+import harryhelloo.restreamer.util.promptUtil;
 import io.github.ollama4j.Ollama;
 import io.github.ollama4j.models.request.ThinkMode;
 import io.github.ollama4j.models.response.Model;
@@ -22,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Log4j2
 @Component
-public class OllamaRepositoryImpl implements OllamaRepository, Settings.ConfigurationChangeListener {
+public class OllamaRepositoryImpl implements OllamaRepository, SettingsManager.ConfigurationChangeListener {
     private Ollama client;
 
     private boolean isReady() {
@@ -38,7 +39,7 @@ public class OllamaRepositoryImpl implements OllamaRepository, Settings.Configur
     }
 
     private void buildClient() {
-        OllamaConfig ollamaConfig = Settings.get().getOllamaConfig();
+        OllamaConfig ollamaConfig = SettingsManager.getInstance().getSettings().getOllamaConfig();
         if (ollamaConfig == null) {
             throw new EmptyConfigException("Ollama Config is empty!");
         }
@@ -80,7 +81,7 @@ public class OllamaRepositoryImpl implements OllamaRepository, Settings.Configur
     @Override
     public AsyncStreamResponse<String> translate(String text, String sourceLang, String targetLang) {
         checkConnection();
-        Settings settings = Settings.get();
+        Settings settings = SettingsManager.getInstance().getSettings();
         OllamaConfig ollamaConfig = settings.getOllamaConfig();
 
         String model = ollamaConfig.getModel();
@@ -131,7 +132,7 @@ public class OllamaRepositoryImpl implements OllamaRepository, Settings.Configur
                                         handler.onNext(chunk);
                                     }
                                 } else {
-                                    Thread.sleep(10); // 短暂休眠，避免CPU占用过高
+                                    Thread.sleep(10); // 短暂休眠，避免 CPU 占用过高
                                 }
                             }
 

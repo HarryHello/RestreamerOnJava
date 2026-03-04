@@ -5,80 +5,71 @@ import harryhelloo.restreamer.repository.SettingsRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * 设置服务
+ *
+ * <p>提供系统配置的加载、保存和更新功能。</p>
+ *
+ * <h2>主要功能：</h2>
+ * <ul>
+ *     <li>应用启动时自动加载配置</li>
+ *     <li>保存配置到文件</li>
+ *     <li>更新内存中的配置</li>
+ * </ul>
+ *
+ * <h2>配置持久化：</h2>
+ * <p>配置通过 {@link SettingsRepository} 持久化到本地文件，
+ * 支持 JSON 格式存储。</p>
+ *
+ * @author harryhelloo
+ * @version 1.0
+ * @see Settings
+ * @see SettingsRepository
+ */
 @Log4j2
 @Service
 public class SettingsService {
 
-    private final SettingsRepository settingsRepository;
-    // 获取设置实例
+    @Autowired
+    private SettingsRepository settingsRepository;
+
+    /**
+     * 当前系统配置对象
+     */
     @Getter
     private Settings settings;
 
-    public SettingsService(SettingsRepository settingsRepository) {
-        this.settingsRepository = settingsRepository;
-    }
-
+    /**
+     * 初始化方法，应用启动时自动加载配置
+     */
     @PostConstruct
     public void init() {
         loadSettings();
     }
 
-    // 从文件加载设置
-    private void loadSettings() {
-        settings = settingsRepository.load();
+    /**
+     * 从文件加载设置
+     */
+    public Settings loadSettings() {
+        return settings = settingsRepository.load();
     }
 
-    // 保存设置到文件
+    /**
+     * 保存设置到文件
+     */
     public void saveSettings() {
         settingsRepository.save(settings);
     }
 
-    // 更新设置并保存
+    /**
+     * 更新设置（仅内存）
+     *
+     * @param updatedSettings 更新后的配置对象
+     */
     public void updateSettings(Settings updatedSettings) {
         this.settings = updatedSettings;
-        saveSettings();
-    }
-
-    // 更新单个设置属性（支持任意深度的深层键，如 "a.b.c.d"）
-    public void updateSetting(String key, Object value) {
-        try {
-            updateSettingRecursive(settings, key, value);
-            saveSettings();
-        } catch (Exception e) {
-            log.error("Failed to update setting: {}", e.getMessage());
-            throw new RuntimeException("Failed to update setting: %s".formatted(key), e);
-        }
-    }
-
-    // 递归更新嵌套属性
-    private void updateSettingRecursive(Object target, String key, Object value) throws Exception {
-        if (key.contains(".")) {
-            // 处理深层键
-            String[] parts = key.split("\\.", 2);
-            String currentKey = parts[0];
-            String remainingKey = parts[1];
-
-            // 获取当前字段
-            java.lang.reflect.Field field = target.getClass().getDeclaredField(currentKey);
-            field.setAccessible(true);
-            Object currentObject = field.get(target);
-
-            if (currentObject == null) {
-                // 如果当前对象为null，需要先创建实例
-                Class<?> fieldClass = field.getType();
-                currentObject = fieldClass.getDeclaredConstructor().newInstance();
-                field.set(target, currentObject);
-            }
-
-            // 递归处理剩余的键
-            updateSettingRecursive(currentObject, remainingKey, value);
-        } else {
-            // 处理最后一级属性
-            java.lang.reflect.Field field = target.getClass().getDeclaredField(key);
-            field.setAccessible(true);
-            field.set(target, value);
-        }
     }
 }
