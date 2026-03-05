@@ -1,10 +1,10 @@
 package harryhelloo.restreamer.controller;
 
+import harryhelloo.restreamer.config.SubtitleAutomationConfig;
 import harryhelloo.restreamer.monitor.ChannelStatusMonitor;
 import harryhelloo.restreamer.pojo.StreamPlatform;
 import harryhelloo.restreamer.pojo.StreamerChannel;
 import harryhelloo.restreamer.service.ChannelService;
-import harryhelloo.restreamer.config.SubtitleAutomationConfig;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,7 +129,7 @@ public class ChannelStatusController {
 
     /**
      * 启动频道状态监控
-     * 
+     *
      * <p>启动监控后，当检测到直播开始时会自动：</p>
      * <ul>
      *     <li>设置直播开始时间（用于字幕时间计算）</li>
@@ -140,7 +140,7 @@ public class ChannelStatusController {
      *     <li>触发 onEndStream 回调（如果已配置）</li>
      *     <li>停止字幕录制</li>
      * </ul>
-     * 
+     *
      * @param channel 频道信息对象
      * @return 操作结果信息
      */
@@ -148,10 +148,10 @@ public class ChannelStatusController {
     public ResponseEntity<String> startMonitoring(@RequestBody @NonNull StreamerChannel channel) {
         try {
             channelStatusMonitor.startMonitoring(channel);
-            
+
             // 配置自动化处理
             subtitleAutomationConfig.configureAutomationForChannel(channel.getChannelId());
-            
+
             return ResponseEntity.ok("Monitoring started");
         } catch (Exception e) {
             log.error("Failed to start monitoring", e);
@@ -181,11 +181,19 @@ public class ChannelStatusController {
      *
      * <p>通过 Server-Sent Events 实时推送频道状态更新。</p>
      *
-     * @param channel 频道信息对象
+     * @param channelId 频道 ID
+     * @param platform  平台类型
      * @return SSE Emitter，用于推送状态更新
      */
     @GetMapping("/monitor/sse")
-    public SseEmitter streamStatus(@RequestBody @NonNull StreamerChannel channel) {
+    public SseEmitter streamStatus(
+        @RequestParam("channelId") String channelId,
+        @RequestParam("platform") String platform
+    ) {
+        StreamerChannel channel = channelService.getChannel(channelId);
+        if (channel == null) {
+            channel = channelService.updateChannel(StreamerChannel.builder().channelId(channelId).platform(platform).build());
+        }
         return channelStatusMonitor.registerSseEmitter(channel);
     }
 }
